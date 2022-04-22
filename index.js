@@ -125,16 +125,15 @@ const onChange = (object, onChange, options = {}) => {
 			return !isValid;
 		},
 
+		// Reverted this back to an older version so that changing a property descriptor does not trigger a change.
+		// This is a problem because Vue changes property descriptors. I've noticed this problem arrises when creating a new DEDDataRow.
 		defineProperty(target, property, descriptor) {
 			if (!cache.isSameDescriptor(descriptor, target, property)) {
-				const previous = target[property];
-
-				if (
-					validate(target, property, descriptor.value, previous)
-					&& cache.defineProperty(target, property, descriptor, previous)
-				) {
-					handleChangeOnTarget(target, property, descriptor.value, previous);
+				if (!cache.defineProperty(target, property, descriptor)) {
+					return false;
 				}
+
+				handleChangeOnTarget(target, property, undefined, descriptor.value);
 			}
 
 			return true;
